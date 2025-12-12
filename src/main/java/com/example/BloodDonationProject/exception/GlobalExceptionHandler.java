@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+// Removed unresolved ApiResponse import
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -17,7 +18,6 @@ public class GlobalExceptionHandler {
     /**
      * Handle validation errors
      */
-    @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
 
@@ -112,5 +112,15 @@ public class GlobalExceptionHandler {
         public void setTimestamp(LocalDateTime timestamp) {
             this.timestamp = timestamp;
         }
+    }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNotFound(ResourceNotFoundException ex) {
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.NOT_FOUND.value(),
+                ex.getMessage(),
+                null,
+                LocalDateTime.now());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
     }
 }

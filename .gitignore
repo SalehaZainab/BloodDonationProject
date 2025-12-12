@@ -130,3 +130,9 @@ spring-boot-starter-parent/
 
 # Help documentation
 HELP.md
+### VS Code ###
+.vscode/
+
+### Env ###
+.env
+
