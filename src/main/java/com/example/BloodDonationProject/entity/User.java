@@ -11,8 +11,8 @@ import java.time.LocalDateTime;
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(length = 36)
+    private String id;
 
     @NotBlank(message = "Name is required")
     @Size(min = 2, max = 100, message = "Name must be between 2 and 100 characters")
@@ -55,6 +55,12 @@ public class User {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    @Column(name = "last_active")
+    private LocalDateTime lastActive;
+
     // @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch =
     // FetchType.LAZY)
     // private DonorProfile donorProfile;
@@ -75,11 +81,11 @@ public class User {
     }
 
     // Getters and Setters
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -139,7 +145,7 @@ public class User {
         this.role = role;
     }
 
-    public Boolean getIsActive() {
+    public Boolean IsActive() {
         return isActive;
     }
 
@@ -163,6 +169,22 @@ public class User {
         this.updatedAt = updatedAt;
     }
 
+    public LocalDateTime getDeletedAt() {
+        return deletedAt;
+    }
+
+    public void setDeletedAt(LocalDateTime deletedAt) {
+        this.deletedAt = deletedAt;
+    }
+
+    public LocalDateTime getLastActive() {
+        return lastActive;
+    }
+
+    public void setLastActive(LocalDateTime lastActive) {
+        this.lastActive = lastActive;
+    }
+
     // public DonorProfile getDonorProfile() {
     // return donorProfile;
     // }
@@ -174,6 +196,9 @@ public class User {
     // Lifecycle callbacks
     @PrePersist
     public void prePersist() {
+        if (this.id == null) {
+            this.id = java.util.UUID.randomUUID().toString();
+        }
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
