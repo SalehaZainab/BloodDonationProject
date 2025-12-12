@@ -196,7 +196,7 @@ public class BloodRequestServiceImpl implements BloodRequestService {
 
     private BloodRequestResponseDTO toDto(BloodRequest entity) {
         BloodRequestResponseDTO dto = new BloodRequestResponseDTO();
-        dto.setRequestId(entity.getRequestId());
+        dto.setId(entity.getId() != null ? entity.getId().toString() : null);
         dto.setUserId(entity.getUserId());
         dto.setBloodGroup(entity.getBloodGroup());
         dto.setUnits(entity.getUnits());

@@ -139,7 +139,7 @@ public class DonorProfileServiceImpl implements DonorProfileService {
 	// Helper method to convert entity to DTO
 	private DonorProfileResponseDTO toDto(DonorProfile donor) {
 		DonorProfileResponseDTO dto = new DonorProfileResponseDTO();
-		dto.setDonorId(donor.getDonorId());
+		dto.setId(donor.getId() != null ? donor.getId().toString() : null);
 		dto.setUserId(donor.getUserId());
 		dto.setAvailability(donor.getAvailability());
 		dto.setLastDonationDate(donor.getLastDonationDate());

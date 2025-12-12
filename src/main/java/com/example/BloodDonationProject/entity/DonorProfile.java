@@ -2,6 +2,7 @@ package com.example.BloodDonationProject.entity;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -18,9 +19,8 @@ import jakarta.persistence.Table;
 public class DonorProfile {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "donor_id")
-	private Long donorId;
+	@GeneratedValue(strategy = GenerationType.UUID)
+	private UUID id;
 
 	@Column(name = "user_id", nullable = false)
 	private Long userId;
@@ -50,12 +50,12 @@ public class DonorProfile {
 		this.availability = availability;
 	}
 
-	public Long getDonorId() {
-		return donorId;
+	public UUID getId() {
+		return id;
 	}
 
-	public void setDonorId(Long donorId) {
-		this.donorId = donorId;
+	public void setId(UUID id) {
+		this.id = id;
 	}
 
 	public Long getUserId() {

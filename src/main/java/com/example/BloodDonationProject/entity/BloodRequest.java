@@ -1,6 +1,7 @@
 package com.example.BloodDonationProject.entity;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -21,8 +22,8 @@ import jakarta.persistence.Table;
 @Table(name = "blood_request")
 public class BloodRequest {
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long requestId;
+	@GeneratedValue(strategy = GenerationType.UUID)
+	private UUID id;
 
 	@Column(nullable = false)
 	private Long userId;
@@ -54,8 +55,8 @@ public class BloodRequest {
 	private LocalDateTime updatedAt;
 
 	// Getters and setters
-	public Long getRequestId() { return requestId; }
-	public void setRequestId(Long requestId) { this.requestId = requestId; }
+	public UUID getId() { return id; }
+	public void setId(UUID id) { this.id = id; }
 	public Long getUserId() { return userId; }
 	public void setUserId(Long userId) { this.userId = userId; }
 	public String getBloodGroup() { return bloodGroup; }

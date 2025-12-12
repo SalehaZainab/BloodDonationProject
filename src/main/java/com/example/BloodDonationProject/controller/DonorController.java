@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.BloodDonationProject.dto.ApiResponse;
 import com.example.BloodDonationProject.dto.DonorProfileRequestDTO;
 import com.example.BloodDonationProject.dto.DonorProfileResponseDTO;
 import com.example.BloodDonationProject.service.DonorProfileService;
@@ -31,52 +32,59 @@ public class DonorController {
 
 	// Create a new donor profile
 	@PostMapping
-	public ResponseEntity<DonorProfileResponseDTO> createDonor(@Valid @RequestBody DonorProfileRequestDTO dto) {
+	public ResponseEntity<ApiResponse<DonorProfileResponseDTO>> createDonor(@Valid @RequestBody DonorProfileRequestDTO dto) {
 		DonorProfileResponseDTO response = service.createDonorProfile(dto);
-		return ResponseEntity.status(HttpStatus.CREATED).body(response);
+		ApiResponse<DonorProfileResponseDTO> body = ApiResponse.success("Donor profile created successfully", response);
+		return ResponseEntity.status(HttpStatus.CREATED).body(body);
 	}
 
 	// Get donor profile by donorId
 	@GetMapping("/{donorId}")
-	public ResponseEntity<DonorProfileResponseDTO> getDonorById(@PathVariable Long donorId) {
+	public ResponseEntity<ApiResponse<DonorProfileResponseDTO>> getDonorById(@PathVariable Long donorId) {
 		DonorProfileResponseDTO response = service.getDonorProfile(donorId);
-		return ResponseEntity.ok(response);
+		ApiResponse<DonorProfileResponseDTO> body = ApiResponse.success("Donor profile fetched successfully", response);
+		return ResponseEntity.ok(body);
 	}
 
 	// Get donor profile by userId
 	@GetMapping("/user/{userId}")
-	public ResponseEntity<DonorProfileResponseDTO> getDonorByUserId(@PathVariable Long userId) {
+	public ResponseEntity<ApiResponse<DonorProfileResponseDTO>> getDonorByUserId(@PathVariable Long userId) {
 		DonorProfileResponseDTO response = service.getByUserId(userId);
-		return ResponseEntity.ok(response);
+		ApiResponse<DonorProfileResponseDTO> body = ApiResponse.success("Donor profile fetched successfully", response);
+		return ResponseEntity.ok(body);
 	}
 
 	// Get all donors
 	@GetMapping
-	public ResponseEntity<List<DonorProfileResponseDTO>> getAllDonors() {
+	public ResponseEntity<ApiResponse<List<DonorProfileResponseDTO>>> getAllDonors() {
 		List<DonorProfileResponseDTO> response = service.getAllDonors();
-		return ResponseEntity.ok(response);
+		ApiResponse<List<DonorProfileResponseDTO>> body = ApiResponse.success("Donor profiles fetched successfully", response);
+		return ResponseEntity.ok(body);
 	}
 
 	// Get all available donors
 	@GetMapping("/available")
-	public ResponseEntity<List<DonorProfileResponseDTO>> getAvailableDonors() {
+	public ResponseEntity<ApiResponse<List<DonorProfileResponseDTO>>> getAvailableDonors() {
 		List<DonorProfileResponseDTO> response = service.getAvailableDonors();
-		return ResponseEntity.ok(response);
+		ApiResponse<List<DonorProfileResponseDTO>> body = ApiResponse.success("Available donors fetched successfully", response);
+		return ResponseEntity.ok(body);
 	}
 
 	// Update donor profile
 	@PutMapping("/{donorId}")
-	public ResponseEntity<DonorProfileResponseDTO> updateDonor(
+	public ResponseEntity<ApiResponse<DonorProfileResponseDTO>> updateDonor(
 			@PathVariable Long donorId,
 			@Valid @RequestBody DonorProfileRequestDTO dto) {
 		DonorProfileResponseDTO response = service.updateDonorProfile(donorId, dto);
-		return ResponseEntity.ok(response);
+		ApiResponse<DonorProfileResponseDTO> body = ApiResponse.success("Donor profile updated successfully", response);
+		return ResponseEntity.ok(body);
 	}
 
 	// Delete donor profile
 	@DeleteMapping("/{donorId}")
-	public ResponseEntity<Void> deleteDonor(@PathVariable Long donorId) {
+	public ResponseEntity<ApiResponse<Void>> deleteDonor(@PathVariable Long donorId) {
 		service.deleteDonorProfile(donorId);
-		return ResponseEntity.noContent().build();
+		ApiResponse<Void> body = ApiResponse.success("Donor profile deleted successfully");
+		return ResponseEntity.ok(body);
 	}
 }

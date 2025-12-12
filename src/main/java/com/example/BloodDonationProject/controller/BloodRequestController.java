@@ -13,8 +13,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.BloodDonationProject.dto.ApiResponse;
 import com.example.BloodDonationProject.dto.BloodRequestRequestDTO;
 import com.example.BloodDonationProject.dto.BloodRequestResponseDTO;
 import com.example.BloodDonationProject.service.BloodRequestService;
@@ -30,56 +32,106 @@ public class BloodRequestController {
     private BloodRequestService bloodRequestService;
 
     @PostMapping
-    public ResponseEntity<BloodRequestResponseDTO> createRequest(@Valid @RequestBody BloodRequestRequestDTO dto) {
+    public ResponseEntity<ApiResponse<BloodRequestResponseDTO>> createRequest(@Valid @RequestBody BloodRequestRequestDTO dto) {
         BloodRequestResponseDTO created = bloodRequestService.createRequest(dto);
-        return new ResponseEntity<>(created, HttpStatus.CREATED);
+        ApiResponse<BloodRequestResponseDTO> body = ApiResponse.success("Blood request created successfully", created);
+        return new ResponseEntity<>(body, HttpStatus.CREATED);
     }
 
     @PutMapping("/{requestId}")
-    public ResponseEntity<BloodRequestResponseDTO> updateRequest(@PathVariable Long requestId, @Valid @RequestBody BloodRequestRequestDTO dto) {
+    public ResponseEntity<ApiResponse<BloodRequestResponseDTO>> updateRequest(@PathVariable Long requestId, @Valid @RequestBody BloodRequestRequestDTO dto) {
         BloodRequestResponseDTO updated = bloodRequestService.updateRequest(requestId, dto);
-        return ResponseEntity.ok(updated);
+        ApiResponse<BloodRequestResponseDTO> body = ApiResponse.success("Blood request updated successfully", updated);
+        return ResponseEntity.ok(body);
     }
 
     @GetMapping("/{requestId}")
-    public ResponseEntity<BloodRequestResponseDTO> getRequestById(@PathVariable Long requestId) {
+    public ResponseEntity<ApiResponse<BloodRequestResponseDTO>> getRequestById(@PathVariable Long requestId) {
         BloodRequestResponseDTO dto = bloodRequestService.getRequestById(requestId);
-        return ResponseEntity.ok(dto);
+        ApiResponse<BloodRequestResponseDTO> body = ApiResponse.success("Blood request fetched successfully", dto);
+        return ResponseEntity.ok(body);
     }
 
     @GetMapping
-    public ResponseEntity<List<BloodRequestResponseDTO>> getAllRequests() {
-        List<BloodRequestResponseDTO> list = bloodRequestService.getAllRequests();
-        return ResponseEntity.ok(list);
+    public ResponseEntity<ApiResponse<List<BloodRequestResponseDTO>>> getAllRequests(
+            @RequestParam(required = false) String bloodGroup,
+            @RequestParam(required = false) Integer units,
+            @RequestParam(required = false) String urgency,
+            @RequestParam(required = false) String city,
+            @RequestParam(required = false) String hospital,
+            @RequestParam(required = false) Long userId) {
+        
+        // Start with all requests or filter by specific criteria
+        List<BloodRequestResponseDTO> list;
+        
+        if (city != null && !city.trim().isEmpty()) {
+            list = bloodRequestService.getRequestsByCity(city);
+        } else if (hospital != null && !hospital.trim().isEmpty()) {
+            list = bloodRequestService.getRequestsByHospital(hospital);
+        } else if (bloodGroup != null && !bloodGroup.trim().isEmpty()) {
+            list = bloodRequestService.getRequestsByBloodGroup(bloodGroup);
+        } else {
+            list = bloodRequestService.getAllRequests();
+        }
+        
+        // Apply additional filters in memory
+        if (userId != null) {
+            final Long filterUserId = userId;
+            list = list.stream()
+                    .filter(req -> req.getUserId() != null && req.getUserId().equals(filterUserId))
+                    .toList();
+        }
+        
+        if (units != null) {
+            final Integer filterUnits = units;
+            list = list.stream()
+                    .filter(req -> req.getUnits() == filterUnits)
+                    .toList();
+        }
+        
+        if (urgency != null && !urgency.trim().isEmpty()) {
+            final String filterUrgency = urgency.trim().toUpperCase();
+            list = list.stream()
+                    .filter(req -> req.getUrgency() != null && req.getUrgency().toString().equalsIgnoreCase(filterUrgency))
+                    .toList();
+        }
+        
+        ApiResponse<List<BloodRequestResponseDTO>> body = ApiResponse.success("Blood requests fetched successfully", list);
+        return ResponseEntity.ok(body);
     }
 
     @GetMapping("/status/{status}")
-    public ResponseEntity<List<BloodRequestResponseDTO>> getRequestsByStatus(@PathVariable RequestStatus status) {
+    public ResponseEntity<ApiResponse<List<BloodRequestResponseDTO>>> getRequestsByStatus(@PathVariable RequestStatus status) {
         List<BloodRequestResponseDTO> list = bloodRequestService.getRequestsByStatus(status);
-        return ResponseEntity.ok(list);
+        ApiResponse<List<BloodRequestResponseDTO>> body = ApiResponse.success("Requests fetched successfully", list);
+        return ResponseEntity.ok(body);
     }
 
     @GetMapping("/bloodGroup/{bloodGroup}")
-    public ResponseEntity<List<BloodRequestResponseDTO>> getRequestsByBloodGroup(@PathVariable String bloodGroup) {
+    public ResponseEntity<ApiResponse<List<BloodRequestResponseDTO>>> getRequestsByBloodGroup(@PathVariable String bloodGroup) {
         List<BloodRequestResponseDTO> list = bloodRequestService.getRequestsByBloodGroup(bloodGroup);
-        return ResponseEntity.ok(list);
+        ApiResponse<List<BloodRequestResponseDTO>> body = ApiResponse.success("Requests fetched successfully", list);
+        return ResponseEntity.ok(body);
     }
 
     @GetMapping("/city/{city}")
-    public ResponseEntity<List<BloodRequestResponseDTO>> getRequestsByCity(@PathVariable String city) {
+    public ResponseEntity<ApiResponse<List<BloodRequestResponseDTO>>> getRequestsByCity(@PathVariable String city) {
         List<BloodRequestResponseDTO> list = bloodRequestService.getRequestsByCity(city);
-        return ResponseEntity.ok(list);
+        ApiResponse<List<BloodRequestResponseDTO>> body = ApiResponse.success("Requests fetched successfully", list);
+        return ResponseEntity.ok(body);
     }
 
     @GetMapping("/hospital/{hospital}")
-    public ResponseEntity<List<BloodRequestResponseDTO>> getRequestsByHospital(@PathVariable String hospital) {
+    public ResponseEntity<ApiResponse<List<BloodRequestResponseDTO>>> getRequestsByHospital(@PathVariable String hospital) {
         List<BloodRequestResponseDTO> list = bloodRequestService.getRequestsByHospital(hospital);
-        return ResponseEntity.ok(list);
+        ApiResponse<List<BloodRequestResponseDTO>> body = ApiResponse.success("Requests fetched successfully", list);
+        return ResponseEntity.ok(body);
     }
 
     @DeleteMapping("/{requestId}")
-    public ResponseEntity<Void> deleteRequest(@PathVariable Long requestId) {
+    public ResponseEntity<ApiResponse<Void>> deleteRequest(@PathVariable Long requestId) {
         bloodRequestService.deleteRequest(requestId);
-        return ResponseEntity.noContent().build();
+        ApiResponse<Void> body = ApiResponse.success("Blood request deleted successfully");
+        return ResponseEntity.ok(body);
     }
 }

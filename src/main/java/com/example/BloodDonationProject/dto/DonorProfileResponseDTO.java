@@ -4,7 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public class DonorProfileResponseDTO {
-	private Long donorId;
+	private String id;
 	private Long userId;
 	private String availability;
 	private LocalDate lastDonationDate;
@@ -15,14 +15,14 @@ public class DonorProfileResponseDTO {
 	public DonorProfileResponseDTO() {
 	}
 
-	public DonorProfileResponseDTO(Long donorId, Long userId, String availability) {
-		this.donorId = donorId;
+	public DonorProfileResponseDTO(String id, Long userId, String availability) {
+		this.id = id;
 		this.userId = userId;
 		this.availability = availability;
 	}
 
-	public Long getDonorId() { return donorId; }
-	public void setDonorId(Long donorId) { this.donorId = donorId; }
+	public String getId() { return id; }
+	public void setId(String id) { this.id = id; }
 
 	public Long getUserId() { return userId; }
 	public void setUserId(Long userId) { this.userId = userId; }
