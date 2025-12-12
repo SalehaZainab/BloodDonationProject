@@ -1,8 +1,5 @@
 package com.example.BloodDonationProject.exception;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -10,50 +7,120 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import com.example.BloodDonationProject.dto.ApiResponse;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+// Removed unresolved ApiResponse import
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-	@ExceptionHandler(ResourceNotFoundException.class)
-	public ResponseEntity<ApiResponse<Void>> handleNotFound(ResourceNotFoundException ex) {
-		return build(HttpStatus.NOT_FOUND, ex.getMessage());
-	}
+    /**
+     * Handle validation errors
+     */
+    public ResponseEntity<ErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        Map<String, String> errors = new HashMap<>();
 
-	@ExceptionHandler(AlreadyExistsException.class)
-	public ResponseEntity<ApiResponse<Void>> handleAlreadyExists(AlreadyExistsException ex) {
-		return build(HttpStatus.CONFLICT, ex.getMessage());
-	}
+        ex.getBindingResult().getAllErrors().forEach((error) -> {
+            String fieldName = ((FieldError) error).getField();
+            String errorMessage = error.getDefaultMessage();
+            errors.put(fieldName, errorMessage);
+        });
 
-	@ExceptionHandler(BadRequestException.class)
-	public ResponseEntity<ApiResponse<Void>> handleBadRequest(BadRequestException ex) {
-		return build(HttpStatus.BAD_REQUEST, ex.getMessage());
-	}
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                "Validation Failed",
+                errors,
+                LocalDateTime.now());
 
-	@ExceptionHandler(IllegalArgumentException.class)
-	public ResponseEntity<ApiResponse<Void>> handleIllegalArgument(IllegalArgumentException ex) {
-		return build(HttpStatus.BAD_REQUEST, ex.getMessage());
-	}
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
 
-	@ExceptionHandler(MethodArgumentNotValidException.class)
-	public ResponseEntity<ApiResponse<Map<String, String>>> handleValidation(MethodArgumentNotValidException ex) {
-		Map<String, String> errors = new HashMap<>();
-		ex.getBindingResult().getAllErrors().forEach(error -> {
-			String field = ((FieldError) error).getField();
-			String message = error.getDefaultMessage();
-			errors.put(field, message);
-		});
-		ApiResponse<Map<String, String>> body = ApiResponse.failure("Validation failed", errors);
-		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
-	}
+    /**
+     * Handle runtime exceptions
+     */
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<ErrorResponse> handleRuntimeException(RuntimeException ex) {
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                ex.getMessage(),
+                null,
+                LocalDateTime.now());
 
-	@ExceptionHandler(Exception.class)
-	public ResponseEntity<ApiResponse<Void>> handleGeneric(Exception ex) {
-		return build(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error: " + ex.getMessage());
-	}
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
 
-	private ResponseEntity<ApiResponse<Void>> build(HttpStatus status, String message) {
-		ApiResponse<Void> body = ApiResponse.failure(message);
-		return ResponseEntity.status(status).body(body);
-	}
+    /**
+     * Handle generic exceptions
+     */
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleGenericException(Exception ex) {
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                "Something went wrong: " + ex.getMessage(),
+                null,
+                LocalDateTime.now());
+
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+    }
+
+    /**
+     * Error response structure
+     */
+    public static class ErrorResponse {
+        private int status;
+        private String message;
+        private Map<String, String> errors;
+        private LocalDateTime timestamp;
+
+        public ErrorResponse(int status, String message, Map<String, String> errors, LocalDateTime timestamp) {
+            this.status = status;
+            this.message = message;
+            this.errors = errors;
+            this.timestamp = timestamp;
+        }
+
+        // Getters and Setters
+        public int getStatus() {
+            return status;
+        }
+
+        public void setStatus(int status) {
+            this.status = status;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+
+        public void setMessage(String message) {
+            this.message = message;
+        }
+
+        public Map<String, String> getErrors() {
+            return errors;
+        }
+
+        public void setErrors(Map<String, String> errors) {
+            this.errors = errors;
+        }
+
+        public LocalDateTime getTimestamp() {
+            return timestamp;
+        }
+
+        public void setTimestamp(LocalDateTime timestamp) {
+            this.timestamp = timestamp;
+        }
+    }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNotFound(ResourceNotFoundException ex) {
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.NOT_FOUND.value(),
+                ex.getMessage(),
+                null,
+                LocalDateTime.now());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+    }
 }
