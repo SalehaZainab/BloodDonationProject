@@ -367,10 +367,11 @@ public class AuthService {
         System.out.println("\n======= VERIFY OTP DEBUG =======");
         System.out.println("Email: " + request.getEmail());
         System.out.println("OTP: " + request.getOtp());
-        
+
         // Check if OTP exists (regardless of verification status)
-        Optional<Otp> anyOtp = otpRepository.findByEmailAndOtpCodeAndVerifiedFalse(request.getEmail(), request.getOtp());
-        
+        Optional<Otp> anyOtp = otpRepository.findByEmailAndOtpCodeAndVerifiedFalse(request.getEmail(),
+                request.getOtp());
+
         if (anyOtp.isEmpty()) {
             System.out.println("❌ No unverified OTP found for this email and code");
             System.out.println("Possible reasons:");
@@ -379,7 +380,7 @@ public class AuthService {
             System.out.println("3. Wrong email entered");
             throw new RuntimeException(ResponseMessages.INVALID_OTP);
         }
-        
+
         Otp otp = anyOtp.get();
         System.out.println("✅ OTP found - Created: " + otp.getCreatedAt());
         System.out.println("OTP Expiry: " + otp.getExpiryTime());
@@ -391,7 +392,7 @@ public class AuthService {
             System.out.println("❌ OTP has expired");
             throw new RuntimeException(ResponseMessages.OTP_EXPIRED);
         }
-        
+
         System.out.println("✅ OTP is valid and can be used for password reset");
         System.out.println("===============================\n");
 
@@ -408,11 +409,13 @@ public class AuthService {
         System.out.println("\n======= RESET PASSWORD DEBUG =======");
         System.out.println("Email: " + request.getEmail());
         System.out.println("OTP: " + request.getOtp());
-        System.out.println("New Password Length: " + (request.getNewPassword() != null ? request.getNewPassword().length() : 0));
-        
+        System.out.println(
+                "New Password Length: " + (request.getNewPassword() != null ? request.getNewPassword().length() : 0));
+
         // Verify OTP
-        Optional<Otp> otpOptional = otpRepository.findByEmailAndOtpCodeAndVerifiedFalse(request.getEmail(), request.getOtp());
-        
+        Optional<Otp> otpOptional = otpRepository.findByEmailAndOtpCodeAndVerifiedFalse(request.getEmail(),
+                request.getOtp());
+
         if (otpOptional.isEmpty()) {
             System.out.println("❌ No unverified OTP found");
             System.out.println("Possible reasons:");
@@ -421,7 +424,7 @@ public class AuthService {
             System.out.println("3. OTP expired and was cleaned up");
             throw new RuntimeException(ResponseMessages.INVALID_OTP);
         }
-        
+
         Otp otp = otpOptional.get();
         System.out.println("✅ OTP found - Created: " + otp.getCreatedAt());
         System.out.println("OTP Expiry: " + otp.getExpiryTime());
@@ -438,17 +441,18 @@ public class AuthService {
 
         System.out.println("✅ User found: " + user.getEmail());
         System.out.println("Updating password...");
-        
-        // TODO: Hash password with BCrypt - Currently storing plain text (SECURITY ISSUE)
+
+        // TODO: Hash password with BCrypt - Currently storing plain text (SECURITY
+        // ISSUE)
         user.setPassword(request.getNewPassword());
         userRepository.save(user);
-        
+
         System.out.println("✅ Password updated successfully");
 
         // Mark OTP as verified
         otp.setVerified(true);
         otpRepository.save(otp);
-        
+
         System.out.println("✅ OTP marked as verified - cannot be reused");
         System.out.println("===============================\n");
 
