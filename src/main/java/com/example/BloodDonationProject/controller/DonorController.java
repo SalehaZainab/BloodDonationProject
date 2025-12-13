@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.BloodDonationProject.dto.ApiResponse;
 import com.example.BloodDonationProject.dto.DonorProfileRequestDTO;
 import com.example.BloodDonationProject.dto.DonorProfileResponseDTO;
+import com.example.BloodDonationProject.security.RequireAuth;
 import com.example.BloodDonationProject.service.DonorProfileService;
 
 import jakarta.validation.Valid;
@@ -31,8 +32,10 @@ public class DonorController {
 	private DonorProfileService service;
 
 	// Create a new donor profile
+	@RequireAuth
 	@PostMapping
-	public ResponseEntity<ApiResponse<DonorProfileResponseDTO>> createDonor(@Valid @RequestBody DonorProfileRequestDTO dto) {
+	public ResponseEntity<ApiResponse<DonorProfileResponseDTO>> createDonor(
+			@Valid @RequestBody DonorProfileRequestDTO dto) {
 		DonorProfileResponseDTO response = service.createDonorProfile(dto);
 		ApiResponse<DonorProfileResponseDTO> body = ApiResponse.success("Donor profile created successfully", response);
 		return ResponseEntity.status(HttpStatus.CREATED).body(body);
@@ -40,7 +43,7 @@ public class DonorController {
 
 	// Get donor profile by donorId
 	@GetMapping("/{donorId}")
-	public ResponseEntity<ApiResponse<DonorProfileResponseDTO>> getDonorById(@PathVariable Long donorId) {
+	public ResponseEntity<ApiResponse<DonorProfileResponseDTO>> getDonorById(@PathVariable String donorId) {
 		DonorProfileResponseDTO response = service.getDonorProfile(donorId);
 		ApiResponse<DonorProfileResponseDTO> body = ApiResponse.success("Donor profile fetched successfully", response);
 		return ResponseEntity.ok(body);
@@ -48,7 +51,7 @@ public class DonorController {
 
 	// Get donor profile by userId
 	@GetMapping("/user/{userId}")
-	public ResponseEntity<ApiResponse<DonorProfileResponseDTO>> getDonorByUserId(@PathVariable Long userId) {
+	public ResponseEntity<ApiResponse<DonorProfileResponseDTO>> getDonorByUserId(@PathVariable String userId) {
 		DonorProfileResponseDTO response = service.getByUserId(userId);
 		ApiResponse<DonorProfileResponseDTO> body = ApiResponse.success("Donor profile fetched successfully", response);
 		return ResponseEntity.ok(body);
@@ -58,7 +61,8 @@ public class DonorController {
 	@GetMapping
 	public ResponseEntity<ApiResponse<List<DonorProfileResponseDTO>>> getAllDonors() {
 		List<DonorProfileResponseDTO> response = service.getAllDonors();
-		ApiResponse<List<DonorProfileResponseDTO>> body = ApiResponse.success("Donor profiles fetched successfully", response);
+		ApiResponse<List<DonorProfileResponseDTO>> body = ApiResponse.success("Donor profiles fetched successfully",
+				response);
 		return ResponseEntity.ok(body);
 	}
 
@@ -66,14 +70,16 @@ public class DonorController {
 	@GetMapping("/available")
 	public ResponseEntity<ApiResponse<List<DonorProfileResponseDTO>>> getAvailableDonors() {
 		List<DonorProfileResponseDTO> response = service.getAvailableDonors();
-		ApiResponse<List<DonorProfileResponseDTO>> body = ApiResponse.success("Available donors fetched successfully", response);
+		ApiResponse<List<DonorProfileResponseDTO>> body = ApiResponse.success("Available donors fetched successfully",
+				response);
 		return ResponseEntity.ok(body);
 	}
 
 	// Update donor profile
+	@RequireAuth
 	@PutMapping("/{donorId}")
 	public ResponseEntity<ApiResponse<DonorProfileResponseDTO>> updateDonor(
-			@PathVariable Long donorId,
+			@PathVariable String donorId,
 			@Valid @RequestBody DonorProfileRequestDTO dto) {
 		DonorProfileResponseDTO response = service.updateDonorProfile(donorId, dto);
 		ApiResponse<DonorProfileResponseDTO> body = ApiResponse.success("Donor profile updated successfully", response);
@@ -81,8 +87,9 @@ public class DonorController {
 	}
 
 	// Delete donor profile
+	@RequireAuth
 	@DeleteMapping("/{donorId}")
-	public ResponseEntity<ApiResponse<Void>> deleteDonor(@PathVariable Long donorId) {
+	public ResponseEntity<ApiResponse<Void>> deleteDonor(@PathVariable String donorId) {
 		service.deleteDonorProfile(donorId);
 		ApiResponse<Void> body = ApiResponse.success("Donor profile deleted successfully");
 		return ResponseEntity.ok(body);

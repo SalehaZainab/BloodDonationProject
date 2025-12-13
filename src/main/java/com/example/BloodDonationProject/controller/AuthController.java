@@ -37,6 +37,18 @@ public class AuthController {
     }
 
     /**
+     * Get Profile - Get authenticated user profile
+     */
+    @RequireAuth
+    @GetMapping("/profile")
+    public ResponseEntity<ApiResponse<UserResponse>> getProfile(
+            @RequestAttribute("userId") String userId) {
+        System.out.println("📝 AuthController.getProfile - Received userId from token: " + userId);
+        ApiResponse<UserResponse> response = authService.getProfile(userId);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
      * Update Profile
      */
     @RequireAuth
@@ -63,6 +75,15 @@ public class AuthController {
     @PostMapping("/forgot-password")
     public ResponseEntity<ApiResponse<Object>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
         ApiResponse<Object> response = authService.forgotPassword(request);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Resend OTP
+     */
+    @PostMapping("/resend-otp")
+    public ResponseEntity<ApiResponse<Object>> resendOtp(@Valid @RequestBody ForgotPasswordRequest request) {
+        ApiResponse<Object> response = authService.resendOtp(request);
         return ResponseEntity.ok(response);
     }
 

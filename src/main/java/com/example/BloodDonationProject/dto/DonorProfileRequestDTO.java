@@ -7,7 +7,7 @@ import jakarta.validation.constraints.NotNull;
 
 public class DonorProfileRequestDTO {
 	@NotNull(message = "User ID is required")
-	private Long userId;
+	private String userId;
 
 	@NotBlank(message = "Availability is required")
 	private String availability;
@@ -18,20 +18,40 @@ public class DonorProfileRequestDTO {
 	public DonorProfileRequestDTO() {
 	}
 
-	public DonorProfileRequestDTO(Long userId, String availability) {
+	public DonorProfileRequestDTO(String userId, String availability) {
 		this.userId = userId;
 		this.availability = availability;
 	}
 
-	public Long getUserId() { return userId; }
-	public void setUserId(Long userId) { this.userId = userId; }
+	public String getUserId() {
+		return userId;
+	}
 
-	public String getAvailability() { return availability; }
-	public void setAvailability(String availability) { this.availability = availability; }
+	public void setUserId(String userId) {
+		this.userId = userId;
+	}
 
-	public LocalDate getLastDonationDate() { return lastDonationDate; }
-	public void setLastDonationDate(LocalDate lastDonationDate) { this.lastDonationDate = lastDonationDate; }
+	public String getAvailability() {
+		return availability;
+	}
 
-	public String getHealthConditions() { return healthConditions; }
-	public void setHealthConditions(String healthConditions) { this.healthConditions = healthConditions; }
+	public void setAvailability(String availability) {
+		this.availability = availability;
+	}
+
+	public LocalDate getLastDonationDate() {
+		return lastDonationDate;
+	}
+
+	public void setLastDonationDate(LocalDate lastDonationDate) {
+		this.lastDonationDate = lastDonationDate;
+	}
+
+	public String getHealthConditions() {
+		return healthConditions;
+	}
+
+	public void setHealthConditions(String healthConditions) {
+		this.healthConditions = healthConditions;
+	}
 }

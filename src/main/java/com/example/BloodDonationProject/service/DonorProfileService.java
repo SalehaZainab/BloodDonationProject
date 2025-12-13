@@ -11,13 +11,13 @@ public interface DonorProfileService {
 	DonorProfileResponseDTO createDonorProfile(DonorProfileRequestDTO dto);
 
 	// Update an existing donor profile
-	DonorProfileResponseDTO updateDonorProfile(Long donorId, DonorProfileRequestDTO dto);
+	DonorProfileResponseDTO updateDonorProfile(String donorId, DonorProfileRequestDTO dto);
 
 	// Get donor profile by donorId
-	DonorProfileResponseDTO getDonorProfile(Long donorId);
+	DonorProfileResponseDTO getDonorProfile(String donorId);
 
 	// Get donor profile by userId
-	DonorProfileResponseDTO getByUserId(Long userId);
+	DonorProfileResponseDTO getByUserId(String userId);
 
 	// Get all donor profiles
 	List<DonorProfileResponseDTO> getAllDonors();
@@ -26,5 +26,5 @@ public interface DonorProfileService {
 	List<DonorProfileResponseDTO> getAvailableDonors();
 
 	// Delete donor profile
-	void deleteDonorProfile(Long donorId);
+	void deleteDonorProfile(String donorId);
 }

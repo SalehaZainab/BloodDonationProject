@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 
 public class DonorProfileResponseDTO {
 	private String id;
-	private Long userId;
+	private String userId;
 	private String availability;
 	private LocalDate lastDonationDate;
 	private String healthConditions;
@@ -15,30 +15,65 @@ public class DonorProfileResponseDTO {
 	public DonorProfileResponseDTO() {
 	}
 
-	public DonorProfileResponseDTO(String id, Long userId, String availability) {
+	public DonorProfileResponseDTO(String id, String userId, String availability) {
 		this.id = id;
 		this.userId = userId;
 		this.availability = availability;
 	}
 
-	public String getId() { return id; }
-	public void setId(String id) { this.id = id; }
+	public String getId() {
+		return id;
+	}
 
-	public Long getUserId() { return userId; }
-	public void setUserId(Long userId) { this.userId = userId; }
+	public void setId(String id) {
+		this.id = id;
+	}
 
-	public String getAvailability() { return availability; }
-	public void setAvailability(String availability) { this.availability = availability; }
+	public String getUserId() {
+		return userId;
+	}
 
-	public LocalDate getLastDonationDate() { return lastDonationDate; }
-	public void setLastDonationDate(LocalDate lastDonationDate) { this.lastDonationDate = lastDonationDate; }
+	public void setUserId(String userId) {
+		this.userId = userId;
+	}
 
-	public String getHealthConditions() { return healthConditions; }
-	public void setHealthConditions(String healthConditions) { this.healthConditions = healthConditions; }
+	public String getAvailability() {
+		return availability;
+	}
 
-	public LocalDateTime getCreatedAt() { return createdAt; }
-	public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+	public void setAvailability(String availability) {
+		this.availability = availability;
+	}
 
-	public LocalDateTime getUpdatedAt() { return updatedAt; }
-	public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+	public LocalDate getLastDonationDate() {
+		return lastDonationDate;
+	}
+
+	public void setLastDonationDate(LocalDate lastDonationDate) {
+		this.lastDonationDate = lastDonationDate;
+	}
+
+	public String getHealthConditions() {
+		return healthConditions;
+	}
+
+	public void setHealthConditions(String healthConditions) {
+		this.healthConditions = healthConditions;
+	}
+
+	public LocalDateTime getCreatedAt() {
+		return createdAt;
+	}
+
+	public void setCreatedAt(LocalDateTime createdAt) {
+		this.createdAt = createdAt;
+	}
+
+	public LocalDateTime getUpdatedAt() {
+		return updatedAt;
+	}
+
+	public void setUpdatedAt(LocalDateTime updatedAt) {
+		this.updatedAt = updatedAt;
+	}
 }
