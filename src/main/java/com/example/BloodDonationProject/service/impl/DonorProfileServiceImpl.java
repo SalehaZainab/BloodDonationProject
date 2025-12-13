@@ -45,6 +45,8 @@ public class DonorProfileServiceImpl implements DonorProfileService {
 		donor.setAvailability(dto.getAvailability());
 		donor.setLastDonationDate(dto.getLastDonationDate());
 		donor.setHealthConditions(dto.getHealthConditions());
+		donor.setBloodGroup(dto.getBloodGroup());
+		donor.setCity(dto.getCity());
 
 		// Save to database
 		try {
@@ -80,6 +82,12 @@ public class DonorProfileServiceImpl implements DonorProfileService {
 		}
 		if (dto.getHealthConditions() != null) {
 			donor.setHealthConditions(dto.getHealthConditions());
+		}
+		if (dto.getBloodGroup() != null) {
+			donor.setBloodGroup(dto.getBloodGroup());
+		}
+		if (dto.getCity() != null && !dto.getCity().isBlank()) {
+			donor.setCity(dto.getCity());
 		}
 
 		// Save and return
@@ -145,6 +153,8 @@ public class DonorProfileServiceImpl implements DonorProfileService {
 		dto.setAvailability(donor.getAvailability());
 		dto.setLastDonationDate(donor.getLastDonationDate());
 		dto.setHealthConditions(donor.getHealthConditions());
+		dto.setBloodGroup(donor.getBloodGroup());
+		dto.setCity(donor.getCity());
 		dto.setCreatedAt(donor.getCreatedAt());
 		dto.setUpdatedAt(donor.getUpdatedAt());
 		return dto;

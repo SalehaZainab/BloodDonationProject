@@ -136,6 +136,11 @@ public class AuthService {
                 throw new RuntimeException("Authentication failed");
             }
 
+            // Check if account is verified
+            if (!user.IsActive()) {
+                throw new RuntimeException(ResponseMessages.ACCOUNT_NOT_VERIFIED);
+            }
+
             // TODO: Handle device token and device type
             // if (deviceToken != null && deviceType != null) {
             // updateUserDevice(user, deviceToken, deviceType);
@@ -181,6 +186,11 @@ public class AuthService {
 
             if (!user.getPassword().equals(derivedKey)) {
                 return new AuthResult(false, "Invalid credentials", null);
+            }
+
+            // Check if account is verified
+            if (!user.IsActive()) {
+                return new AuthResult(false, ResponseMessages.ACCOUNT_NOT_VERIFIED, null);
             }
 
             return new AuthResult(true, "Authentication successful", user);
@@ -354,12 +364,37 @@ public class AuthService {
      * Verify OTP for password reset
      */
     public ApiResponse<Object> verifyOtp(VerifyOtpRequest request) {
-        Otp otp = otpRepository.findByEmailAndOtpCodeAndVerifiedFalse(request.getEmail(), request.getOtp())
-                .orElseThrow(() -> new RuntimeException(ResponseMessages.INVALID_OTP));
+        System.out.println("\n======= VERIFY OTP DEBUG =======");
+        System.out.println("Email: " + request.getEmail());
+        System.out.println("OTP: " + request.getOtp());
+
+        // Check if OTP exists (regardless of verification status)
+        Optional<Otp> anyOtp = otpRepository.findByEmailAndOtpCodeAndVerifiedFalse(request.getEmail(),
+                request.getOtp());
+
+        if (anyOtp.isEmpty()) {
+            System.out.println("❌ No unverified OTP found for this email and code");
+            System.out.println("Possible reasons:");
+            System.out.println("1. OTP was already used/verified");
+            System.out.println("2. Wrong OTP code entered");
+            System.out.println("3. Wrong email entered");
+            throw new RuntimeException(ResponseMessages.INVALID_OTP);
+        }
+
+        Otp otp = anyOtp.get();
+        System.out.println("✅ OTP found - Created: " + otp.getCreatedAt());
+        System.out.println("OTP Expiry: " + otp.getExpiryTime());
+        System.out.println("Current Time: " + LocalDateTime.now());
+        System.out.println("Is Expired: " + otp.isExpired());
+        System.out.println("Is Verified: " + otp.isVerified());
 
         if (otp.isExpired()) {
+            System.out.println("❌ OTP has expired");
             throw new RuntimeException(ResponseMessages.OTP_EXPIRED);
         }
+
+        System.out.println("✅ OTP is valid and can be used for password reset");
+        System.out.println("===============================\n");
 
         return ApiResponse.success(
                 ResponseMessages.OTP_VERIFIED_SUCCESS,
@@ -371,11 +406,32 @@ public class AuthService {
      */
     @Transactional
     public ApiResponse<Object> resetPassword(ResetPasswordRequest request) {
+        System.out.println("\n======= RESET PASSWORD DEBUG =======");
+        System.out.println("Email: " + request.getEmail());
+        System.out.println("OTP: " + request.getOtp());
+        System.out.println(
+                "New Password Length: " + (request.getNewPassword() != null ? request.getNewPassword().length() : 0));
+
         // Verify OTP
-        Otp otp = otpRepository.findByEmailAndOtpCodeAndVerifiedFalse(request.getEmail(), request.getOtp())
-                .orElseThrow(() -> new RuntimeException(ResponseMessages.INVALID_OTP));
+        Optional<Otp> otpOptional = otpRepository.findByEmailAndOtpCodeAndVerifiedFalse(request.getEmail(),
+                request.getOtp());
+
+        if (otpOptional.isEmpty()) {
+            System.out.println("❌ No unverified OTP found");
+            System.out.println("Possible reasons:");
+            System.out.println("1. OTP was already used for password reset");
+            System.out.println("2. Wrong OTP code");
+            System.out.println("3. OTP expired and was cleaned up");
+            throw new RuntimeException(ResponseMessages.INVALID_OTP);
+        }
+
+        Otp otp = otpOptional.get();
+        System.out.println("✅ OTP found - Created: " + otp.getCreatedAt());
+        System.out.println("OTP Expiry: " + otp.getExpiryTime());
+        System.out.println("Is Expired: " + otp.isExpired());
 
         if (otp.isExpired()) {
+            System.out.println("❌ OTP has expired");
             throw new RuntimeException(ResponseMessages.OTP_EXPIRED);
         }
 
@@ -383,13 +439,22 @@ public class AuthService {
         User user = userRepository.findByEmailAndDeletedAtIsNull(request.getEmail())
                 .orElseThrow(() -> new RuntimeException(ResponseMessages.USER_NOT_FOUND));
 
-        // TODO: Hash password with BCrypt
+        System.out.println("✅ User found: " + user.getEmail());
+        System.out.println("Updating password...");
+
+        // TODO: Hash password with BCrypt - Currently storing plain text (SECURITY
+        // ISSUE)
         user.setPassword(request.getNewPassword());
         userRepository.save(user);
+
+        System.out.println("✅ Password updated successfully");
 
         // Mark OTP as verified
         otp.setVerified(true);
         otpRepository.save(otp);
+
+        System.out.println("✅ OTP marked as verified - cannot be reused");
+        System.out.println("===============================\n");
 
         return ApiResponse.success(
                 ResponseMessages.PASSWORD_RESET_SUCCESS,

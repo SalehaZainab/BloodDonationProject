@@ -12,8 +12,14 @@ import com.example.BloodDonationProject.dto.BloodRequestRequestDTO;
 import com.example.BloodDonationProject.dto.BloodRequestResponseDTO;
 import com.example.BloodDonationProject.entity.BloodGroup;
 import com.example.BloodDonationProject.entity.BloodRequest;
+import com.example.BloodDonationProject.entity.DonorProfile;
+import com.example.BloodDonationProject.entity.User;
 import com.example.BloodDonationProject.repository.BloodRequestRepository;
+import com.example.BloodDonationProject.repository.DonorRepository;
+import com.example.BloodDonationProject.repository.UserRepository;
 import com.example.BloodDonationProject.service.BloodRequestService;
+import com.example.BloodDonationProject.service.EmailService;
+import com.example.BloodDonationProject.util.Availability;
 import com.example.BloodDonationProject.util.RequestStatus;
 
 /**
@@ -33,6 +39,15 @@ public class BloodRequestServiceImpl implements BloodRequestService {
     @Autowired
     private BloodRequestRepository bloodRequestRepository;
 
+    @Autowired
+    private DonorRepository donorRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private EmailService emailService;
+
     @Override
     public BloodRequestResponseDTO createRequest(BloodRequestRequestDTO dto) {
         // All users can create blood requests - they are recipients asking for blood
@@ -47,6 +62,16 @@ public class BloodRequestServiceImpl implements BloodRequestService {
         entity.setStatus(RequestStatus.PENDING); // Always enforce PENDING on creation
 
         BloodRequest saved = bloodRequestRepository.save(entity);
+
+        // After saving request, find matching donors and notify them
+        try {
+            notifyMatchingDonors(saved);
+        } catch (Exception e) {
+            // Log error but don't fail the request creation
+            System.err.println("Failed to notify matching donors: " + e.getMessage());
+            e.printStackTrace();
+        }
+
         return toDto(saved);
     }
 
@@ -178,6 +203,140 @@ public class BloodRequestServiceImpl implements BloodRequestService {
         else {
             throw new RuntimeException("Cannot change status of " + currentStatus + " requests.");
         }
+    }
+
+    /**
+     * Find matching donors and send them email notifications about the new blood
+     * request.
+     * Matches donors based on blood group and city.
+     */
+    private void notifyMatchingDonors(BloodRequest request) {
+        // Find available donors matching the blood group and city
+        List<DonorProfile> matchingDonors = donorRepository.findByBloodGroupAndCityAndAvailability(
+                request.getBloodGroup(),
+                request.getCity(),
+                Availability.AVAILABLE.getValue());
+
+        System.out.println("Found " + matchingDonors.size() + " matching donors for blood request "
+                + request.getId());
+
+        for (DonorProfile donor : matchingDonors) {
+            try {
+                // Get user details from userId
+                User user = userRepository.findByIdAndDeletedAtIsNull(donor.getUserId()).orElse(null);
+                if (user == null || user.getEmail() == null || user.getEmail().isBlank()) {
+                    System.out.println("Skipping donor " + donor.getId() + " - user not found or no email");
+                    continue;
+                }
+
+                // Send notification email
+                sendDonorMatchNotificationEmail(user, request);
+                System.out.println("Sent notification to donor: " + user.getEmail());
+            } catch (Exception e) {
+                System.err.println("Failed to notify donor " + donor.getId() + ": " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * Send email notification to a donor about a matching blood request
+     */
+    private void sendDonorMatchNotificationEmail(User donor, BloodRequest request) {
+        String subject = "Blood Donation Request - " + request.getBloodGroup().getDisplayName() + " Needed";
+
+        String htmlBody = buildDonorMatchEmailTemplate(
+                donor.getName(),
+                request.getBloodGroup().getDisplayName(),
+                request.getCity(),
+                request.getHospital(),
+                request.getUnits(),
+                request.getUrgency().toString());
+
+        emailService.sendHtmlEmail(donor.getEmail(), subject, htmlBody);
+    }
+
+    /**
+     * Build HTML email template for donor match notification
+     */
+    private String buildDonorMatchEmailTemplate(String donorName, String bloodGroup, String city,
+            String hospital, int units, String urgency) {
+        return """
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <style>
+                        body {
+                            font-family: Arial, sans-serif;
+                            line-height: 1.6;
+                            color: #333;
+                            max-width: 600px;
+                            margin: 0 auto;
+                            padding: 20px;
+                        }
+                        .container {
+                            background-color: #f9f9f9;
+                            border-radius: 10px;
+                            padding: 30px;
+                            border: 2px solid #e74c3c;
+                        }
+                        .header {
+                            text-align: center;
+                            color: #e74c3c;
+                            margin-bottom: 20px;
+                        }
+                        .content {
+                            background-color: white;
+                            padding: 20px;
+                            border-radius: 5px;
+                            margin: 20px 0;
+                        }
+                        .details {
+                            margin: 15px 0;
+                        }
+                        .details strong {
+                            color: #e74c3c;
+                        }
+                        .urgency {
+                            background-color: #fff3cd;
+                            border-left: 4px solid #ffc107;
+                            padding: 10px;
+                            margin: 15px 0;
+                        }
+                        .footer {
+                            text-align: center;
+                            margin-top: 20px;
+                            font-size: 12px;
+                            color: #666;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <h1 class="header">🩸 Blood Donation Request</h1>
+                        <p>Dear <strong>%s</strong>,</p>
+                        <div class="content">
+                            <p>A new blood donation request has been posted in your area that matches your profile!</p>
+                            <div class="details">
+                                <p><strong>Blood Group Required:</strong> %s</p>
+                                <p><strong>City:</strong> %s</p>
+                                <p><strong>Hospital:</strong> %s</p>
+                                <p><strong>Units Needed:</strong> %d</p>
+                            </div>
+                            <div class="urgency">
+                                <strong>Urgency Level:</strong> %s
+                            </div>
+                            <p>Your donation can save lives! If you are available and willing to donate, please respond as soon as possible.</p>
+                        </div>
+                        <div class="footer">
+                            <p>This is an automated notification from Blood Donation System</p>
+                            <p>If you are not available to donate, please update your availability status in your profile</p>
+                        </div>
+                    </div>
+                </body>
+                </html>
+                """
+                .formatted(donorName, bloodGroup, city, hospital, units, urgency);
     }
 
     private BloodRequest toEntity(BloodRequestRequestDTO dto) {

@@ -12,6 +12,8 @@ public interface OtpRepository extends JpaRepository<Otp, String> {
 
     Optional<Otp> findByEmailAndOtpCodeAndVerifiedFalse(String email, String otpCode);
 
+    Optional<Otp> findByEmailAndOtpCode(String email, String otpCode);
+
     Optional<Otp> findTopByEmailAndVerifiedFalseOrderByCreatedAtDesc(String email);
 
     void deleteByEmail(String email);

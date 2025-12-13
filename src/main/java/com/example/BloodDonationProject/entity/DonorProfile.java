@@ -9,6 +9,8 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -33,6 +35,13 @@ public class DonorProfile {
 
     @Column(name = "health_conditions", columnDefinition = "text")
     private String healthConditions;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "blood_group")
+    private BloodGroup bloodGroup;
+
+    @Column(name = "city")
+    private String city;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -88,6 +97,22 @@ public class DonorProfile {
 
     public void setHealthConditions(String healthConditions) {
         this.healthConditions = healthConditions;
+    }
+
+    public BloodGroup getBloodGroup() {
+        return bloodGroup;
+    }
+
+    public void setBloodGroup(BloodGroup bloodGroup) {
+        this.bloodGroup = bloodGroup;
+    }
+
+    public String getCity() {
+        return city;
+    }
+
+    public void setCity(String city) {
+        this.city = city;
     }
 
     public LocalDateTime getCreatedAt() {
