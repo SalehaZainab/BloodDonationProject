@@ -1,55 +1,22 @@
-package com.example.BloodDonationProject.entity;
+package com.example.BloodDonationProject.dto.notification;
 
-import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.Map;
 
-@Entity
-@Table(name = "notifications")
-public class Notification {
+public class NotificationResponse {
 
-    @Id
-    @Column(length = 36)
     private String id;
-
-    @Column(name = "notifiable_id", nullable = false, length = 36)
     private String notifiableId;
-
-    @Column(name = "ref_id")
     private String refId;
-
-    @Column(nullable = false)
     private String title;
-
-    @Column(columnDefinition = "TEXT")
     private String message;
-
-    @Column(name = "type")
     private String type;
-
-    @Column(columnDefinition = "TEXT")
-    private String extra; // JSON string for extra data
-
-    @Column(name = "created_at", nullable = false, updatable = false)
+    private Map<String, Object> extra;
     private LocalDateTime createdAt;
-
-    @Column(name = "read_at")
     private LocalDateTime readAt;
 
-    @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
-
     // Constructors
-    public Notification() {
-    }
-
-    public Notification(String notifiableId, String refId, String title, String message, String type, String extra) {
-        this.notifiableId = notifiableId;
-        this.refId = refId;
-        this.title = title;
-        this.message = message;
-        this.type = type;
-        this.extra = extra;
-        this.createdAt = LocalDateTime.now();
+    public NotificationResponse() {
     }
 
     // Getters and Setters
@@ -101,11 +68,11 @@ public class Notification {
         this.type = type;
     }
 
-    public String getExtra() {
+    public Map<String, Object> getExtra() {
         return extra;
     }
 
-    public void setExtra(String extra) {
+    public void setExtra(Map<String, Object> extra) {
         this.extra = extra;
     }
 
@@ -123,24 +90,5 @@ public class Notification {
 
     public void setReadAt(LocalDateTime readAt) {
         this.readAt = readAt;
-    }
-
-    public LocalDateTime getDeletedAt() {
-        return deletedAt;
-    }
-
-    public void setDeletedAt(LocalDateTime deletedAt) {
-        this.deletedAt = deletedAt;
-    }
-
-    // Lifecycle callbacks
-    @PrePersist
-    public void prePersist() {
-        if (this.id == null) {
-            this.id = java.util.UUID.randomUUID().toString();
-        }
-        if (this.createdAt == null) {
-            this.createdAt = LocalDateTime.now();
-        }
     }
 }
