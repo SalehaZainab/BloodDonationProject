@@ -44,4 +44,8 @@ public interface DonationHistoryRepository extends JpaRepository<DonationHistory
     @Query("SELECT d FROM DonationHistory d WHERE d.donorId = :donorId AND d.donationDate >= :sinceDate AND d.deletedAt IS NULL ORDER BY d.donationDate DESC")
     List<DonationHistory> findRecentDonationsByDonor(@Param("donorId") String donorId,
             @Param("sinceDate") LocalDateTime sinceDate);
+
+    // Find donations by blood group
+    List<DonationHistory> findByBloodGroupAndDeletedAtIsNullOrderByDonationDateDesc(
+            com.example.BloodDonationProject.entity.BloodGroup bloodGroup);
 }

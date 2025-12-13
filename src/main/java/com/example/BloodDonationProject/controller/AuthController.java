@@ -67,6 +67,15 @@ public class AuthController {
     }
 
     /**
+     * Resend OTP
+     */
+    @PostMapping("/resend-otp")
+    public ResponseEntity<ApiResponse<Object>> resendOtp(@Valid @RequestBody ForgotPasswordRequest request) {
+        ApiResponse<Object> response = authService.resendOtp(request);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
      * Verify OTP for password reset
      */
     @PostMapping("/verify-otp")

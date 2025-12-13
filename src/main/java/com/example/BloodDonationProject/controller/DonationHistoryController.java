@@ -2,6 +2,7 @@ package com.example.BloodDonationProject.controller;
 
 import com.example.BloodDonationProject.dto.donation.DonationHistoryRequest;
 import com.example.BloodDonationProject.dto.donation.DonationHistoryResponse;
+import com.example.BloodDonationProject.entity.BloodGroup;
 import com.example.BloodDonationProject.security.RequireAuth;
 import com.example.BloodDonationProject.service.DonationHistoryService;
 import com.example.BloodDonationProject.util.ApiResponse;
@@ -36,12 +37,27 @@ public class DonationHistoryController {
     }
 
     /**
-     * Get all donation histories
+     * Get all donation histories with optional filters
      */
     @GetMapping
     @RequireAuth
-    public ResponseEntity<ApiResponse<List<DonationHistoryResponse>>> getAllDonationHistories() {
-        List<DonationHistoryResponse> donations = donationHistoryService.getAllDonationHistories();
+    public ResponseEntity<ApiResponse<List<DonationHistoryResponse>>> getAllDonationHistories(
+            @RequestParam(required = false) String donorId,
+            @RequestParam(required = false) String recipientId,
+            @RequestParam(required = false) String bloodRequestId,
+            @RequestParam(required = false) String city,
+            @RequestParam(required = false) BloodGroup bloodGroup) {
+
+        List<DonationHistoryResponse> donations;
+
+        // If any filter is provided, use filter method
+        if (donorId != null || recipientId != null || bloodRequestId != null ||
+                city != null || bloodGroup != null) {
+            donations = donationHistoryService.filterDonations(donorId, recipientId, bloodRequestId, city, bloodGroup);
+        } else {
+            donations = donationHistoryService.getAllDonationHistories();
+        }
+
         return ResponseEntity.ok(ApiResponse.success(
                 10000,
                 "Donation histories fetched successfully",

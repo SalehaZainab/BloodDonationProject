@@ -25,6 +25,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final OtpRepository otpRepository;
     private final JwtTokenProvider jwtTokenProvider;
+    private final EmailService emailService;
     // TODO: Add PasswordEncoder when implementing security
 
     private static final int OTP_EXPIRY_IN_MINUTES = 10;
@@ -77,16 +78,19 @@ public class AuthService {
         saveOtp(savedUser.getEmail(), otp, otpExpiresIn);
 
         // Send verification email
-        // TODO: Implement email service
-        // Mail.SendEmail({
-        // to: email,
-        // subject: "Verify your account",
-        // data: {otp_code: otp},
-        // projectName: "BloodDonation",
-        // templateName: "verify_account_template"
-        // }, "registration-mail");
+        System.out.println("\n🔄 Attempting to send OTP email...");
+        try {
+            emailService.sendOtpEmail(savedUser.getEmail(), otp, savedUser.getName());
+            System.out.println("✅ OTP email sent successfully to: " + email);
+        } catch (Exception e) {
+            System.err.println("❌ FAILED to send OTP email!");
+            System.err.println("Error message: " + e.getMessage());
+            System.err.println("Error type: " + e.getClass().getName());
+            e.printStackTrace();
+            // Continue with registration even if email fails
+        }
 
-        System.out.println("Verification email sent to: " + email);
+        System.out.println("Verification process completed for: " + email);
 
         // Get sanitized user data
         UserResponse userData = mapToResponse(savedUser);
@@ -277,6 +281,15 @@ public class AuthService {
         user.setIsActive(true);
         userRepository.save(user);
 
+        // Send welcome email after successful verification
+        try {
+            emailService.sendWelcomeEmail(user.getEmail(), user.getName());
+            System.out.println("✅ Welcome email sent to: " + user.getEmail());
+        } catch (Exception e) {
+            System.err.println("❌ Failed to send welcome email: " + e.getMessage());
+            // Continue even if email fails
+        }
+
         return ApiResponse.success(
                 ResponseMessages.VERIFICATION_SUCCESS,
                 ResponseMessages.ACCOUNT_VERIFIED);
@@ -298,7 +311,18 @@ public class AuthService {
         String otp = Utils.OTPGenerator();
         System.out.println("Generated OTP for password reset: " + otp);
         saveOtp(request.getEmail(), otp, otpExpiresIn);
-        // TODO: Send OTP via email
+
+        // Send OTP via email
+        User user = userRepository.findByEmailAndDeletedAtIsNull(request.getEmail())
+                .orElseThrow(() -> new RuntimeException(ResponseMessages.USER_NOT_FOUND));
+
+        try {
+            emailService.sendPasswordResetEmail(user.getEmail(), otp, user.getName());
+            System.out.println("Password reset OTP sent to: " + user.getEmail());
+        } catch (Exception e) {
+            System.err.println("Failed to send password reset email: " + e.getMessage());
+            throw new RuntimeException("Failed to send OTP email. Please try again.");
+        }
 
         return ApiResponse.success(
                 ResponseMessages.OTP_SENT_SUCCESS,
@@ -367,6 +391,38 @@ public class AuthService {
         return ApiResponse.success(
                 ResponseMessages.ACCOUNT_DELETE_SUCCESS,
                 ResponseMessages.ACCOUNT_DELETED);
+    }
+
+    /**
+     * Resend OTP for account verification or password reset
+     */
+    @Transactional
+    public ApiResponse<Object> resendOtp(ForgotPasswordRequest request) {
+        // Check if user exists
+        User user = userRepository.findByEmailAndDeletedAtIsNull(request.getEmail())
+                .orElseThrow(() -> new RuntimeException(ResponseMessages.USER_NOT_FOUND));
+
+        // Generate new OTP
+        LocalDateTime currentTime = LocalDateTime.now();
+        LocalDateTime otpExpiresIn = currentTime.plusMinutes(OTP_EXPIRY_IN_MINUTES);
+
+        String otp = Utils.OTPGenerator();
+        System.out.println("Generated OTP for resend: " + otp);
+        saveOtp(request.getEmail(), otp, otpExpiresIn);
+
+        // Send OTP via email
+        System.out.println("\n🔄 Attempting to resend OTP email...");
+        try {
+            emailService.sendOtpEmail(user.getEmail(), otp, user.getName());
+            System.out.println("✅ OTP email resent successfully to: " + user.getEmail());
+        } catch (Exception e) {
+            System.err.println("❌ Failed to resend OTP email: " + e.getMessage());
+            throw new RuntimeException("Failed to send OTP email. Please try again.");
+        }
+
+        return ApiResponse.success(
+                ResponseMessages.OTP_SENT_SUCCESS,
+                "OTP has been resent to your email");
     }
 
     /**

@@ -2,6 +2,7 @@ package com.example.BloodDonationProject.service;
 
 import com.example.BloodDonationProject.dto.donation.DonationHistoryRequest;
 import com.example.BloodDonationProject.dto.donation.DonationHistoryResponse;
+import com.example.BloodDonationProject.entity.BloodGroup;
 import com.example.BloodDonationProject.entity.DonationHistory;
 import com.example.BloodDonationProject.entity.User;
 import com.example.BloodDonationProject.repository.DonationHistoryRepository;
@@ -212,6 +213,36 @@ public class DonationHistoryService {
 
         donation.setDeletedAt(LocalDateTime.now());
         donationHistoryRepository.save(donation);
+    }
+
+    /**
+     * Get donations by blood group
+     */
+    public List<DonationHistoryResponse> getDonationsByBloodGroup(BloodGroup bloodGroup) {
+        return donationHistoryRepository.findByBloodGroupAndDeletedAtIsNullOrderByDonationDateDesc(bloodGroup)
+                .stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Filter donations with multiple optional criteria
+     */
+    public List<DonationHistoryResponse> filterDonations(String donorId, String recipientId,
+            String bloodRequestId, String city, BloodGroup bloodGroup) {
+
+        List<DonationHistory> donations = donationHistoryRepository.findByDeletedAtIsNullOrderByDonationDateDesc();
+
+        return donations.stream()
+                .filter(d -> donorId == null || d.getDonorId().equals(donorId))
+                .filter(d -> recipientId == null
+                        || d.getRecipientId() != null && d.getRecipientId().equals(recipientId))
+                .filter(d -> bloodRequestId == null
+                        || d.getBloodRequestId() != null && d.getBloodRequestId().equals(bloodRequestId))
+                .filter(d -> city == null || d.getCity().equalsIgnoreCase(city))
+                .filter(d -> bloodGroup == null || d.getBloodGroup() == bloodGroup)
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
     }
 
     /**
