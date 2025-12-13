@@ -2,6 +2,8 @@ package com.example.BloodDonationProject.dto;
 
 import java.time.LocalDate;
 
+import com.example.BloodDonationProject.entity.BloodGroup;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
@@ -14,6 +16,12 @@ public class DonorProfileRequestDTO {
 
 	private LocalDate lastDonationDate;
 	private String healthConditions;
+
+	@NotNull(message = "Blood group is required")
+	private BloodGroup bloodGroup;
+
+	@NotBlank(message = "City is required")
+	private String city;
 
 	public DonorProfileRequestDTO() {
 	}
@@ -53,5 +61,21 @@ public class DonorProfileRequestDTO {
 
 	public void setHealthConditions(String healthConditions) {
 		this.healthConditions = healthConditions;
+	}
+
+	public BloodGroup getBloodGroup() {
+		return bloodGroup;
+	}
+
+	public void setBloodGroup(BloodGroup bloodGroup) {
+		this.bloodGroup = bloodGroup;
+	}
+
+	public String getCity() {
+		return city;
+	}
+
+	public void setCity(String city) {
+		this.city = city;
 	}
 }

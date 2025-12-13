@@ -3,12 +3,16 @@ package com.example.BloodDonationProject.dto;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+import com.example.BloodDonationProject.entity.BloodGroup;
+
 public class DonorProfileResponseDTO {
 	private String id;
 	private String userId;
 	private String availability;
 	private LocalDate lastDonationDate;
 	private String healthConditions;
+	private BloodGroup bloodGroup;
+	private String city;
 	private LocalDateTime createdAt;
 	private LocalDateTime updatedAt;
 
@@ -59,6 +63,22 @@ public class DonorProfileResponseDTO {
 
 	public void setHealthConditions(String healthConditions) {
 		this.healthConditions = healthConditions;
+	}
+
+	public BloodGroup getBloodGroup() {
+		return bloodGroup;
+	}
+
+	public void setBloodGroup(BloodGroup bloodGroup) {
+		this.bloodGroup = bloodGroup;
+	}
+
+	public String getCity() {
+		return city;
+	}
+
+	public void setCity(String city) {
+		this.city = city;
 	}
 
 	public LocalDateTime getCreatedAt() {

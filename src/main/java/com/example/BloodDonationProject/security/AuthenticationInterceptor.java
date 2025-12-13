@@ -1,5 +1,7 @@
 package com.example.BloodDonationProject.security;
 
+import com.example.BloodDonationProject.entity.User;
+import com.example.BloodDonationProject.repository.UserRepository;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -8,12 +10,15 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 
+import java.util.Optional;
+
 @Component
 @RequiredArgsConstructor
 public class AuthenticationInterceptor implements HandlerInterceptor {
 
     private final JwtTokenProvider jwtTokenProvider;
     private final com.example.BloodDonationProject.service.AuthService authService;
+    private final UserRepository userRepository;
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
@@ -80,6 +85,26 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
 
             // Get user ID from token and set it in request attribute
             String userId = jwtTokenProvider.getUserIdFromToken(token);
+
+            // Check if user account is verified/active
+            Optional<User> userOptional = userRepository.findByIdAndDeletedAtIsNull(userId);
+            if (userOptional.isEmpty()) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json");
+                response.getWriter()
+                        .write("{\"status\":false,\"statusNumber\":1010,\"message\":\"User not found\",\"data\":{}}");
+                return false;
+            }
+
+            User user = userOptional.get();
+            if (!user.IsActive()) {
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                response.setContentType("application/json");
+                response.getWriter()
+                        .write("{\"status\":false,\"statusNumber\":1010,\"message\":\"Please verify your account first\",\"data\":{}}");
+                return false;
+            }
+
             request.setAttribute("userId", userId);
 
             // Update lastActive for the authenticated user
