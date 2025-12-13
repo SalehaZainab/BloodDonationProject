@@ -23,7 +23,7 @@ public class DonorProfile {
 	private UUID id;
 
 	@Column(name = "user_id", nullable = false)
-	private Long userId;
+	private String userId;
 
 	@Column(name = "availability", nullable = false, length = 20)
 	private String availability;
@@ -45,7 +45,7 @@ public class DonorProfile {
 	public DonorProfile() {
 	}
 
-	public DonorProfile(Long userId, String availability) {
+	public DonorProfile(String userId, String availability) {
 		this.userId = userId;
 		this.availability = availability;
 	}
@@ -58,11 +58,11 @@ public class DonorProfile {
 		this.id = id;
 	}
 
-	public Long getUserId() {
+	public String getUserId() {
 		return userId;
 	}
 
-	public void setUserId(Long userId) {
+	public void setUserId(String userId) {
 		this.userId = userId;
 	}
 

@@ -7,7 +7,7 @@ import jakarta.validation.constraints.NotNull;
 
 public class DonorProfileRequestDTO {
 	@NotNull(message = "User ID is required")
-	private Long userId;
+	private String userId;
 
 	@NotBlank(message = "Availability is required")
 	private String availability;
@@ -18,13 +18,13 @@ public class DonorProfileRequestDTO {
 	public DonorProfileRequestDTO() {
 	}
 
-	public DonorProfileRequestDTO(Long userId, String availability) {
+	public DonorProfileRequestDTO(String userId, String availability) {
 		this.userId = userId;
 		this.availability = availability;
 	}
 
-	public Long getUserId() { return userId; }
-	public void setUserId(Long userId) { this.userId = userId; }
+	public String getUserId() { return userId; }
+	public void setUserId(String userId) { this.userId = userId; }
 
 	public String getAvailability() { return availability; }
 	public void setAvailability(String availability) { this.availability = availability; }

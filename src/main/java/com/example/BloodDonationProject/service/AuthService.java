@@ -226,6 +226,27 @@ public class AuthService {
     }
 
     /**
+     * Get user profile by userId
+     */
+    public ApiResponse<UserResponse> getProfile(String userId) {
+        System.out.println("🔍 getProfile called with userId: " + userId);
+
+        User user = userRepository.findByIdAndDeletedAtIsNull(userId)
+                .orElseThrow(() -> {
+                    System.out.println("❌ User not found for userId: " + userId);
+                    return new RuntimeException(ResponseMessages.USER_NOT_FOUND);
+                });
+
+        System.out.println("✅ User found: " + user.getEmail());
+        UserResponse userData = mapToResponse(user);
+
+        return ApiResponse.success(
+                ResponseMessages.PROFILE_UPDATE_SUCCESS,
+                "Profile retrieved successfully",
+                userData);
+    }
+
+    /**
      * Update user profile
      */
     @Transactional

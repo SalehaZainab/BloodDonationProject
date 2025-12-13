@@ -1,6 +1,7 @@
 package com.example.BloodDonationProject.service.impl;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,10 +10,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.example.BloodDonationProject.dto.BloodRequestRequestDTO;
 import com.example.BloodDonationProject.dto.BloodRequestResponseDTO;
+import com.example.BloodDonationProject.entity.BloodGroup;
 import com.example.BloodDonationProject.entity.BloodRequest;
 import com.example.BloodDonationProject.repository.BloodRequestRepository;
 import com.example.BloodDonationProject.service.BloodRequestService;
-import com.example.BloodDonationProject.util.BloodGroupValidator;
 import com.example.BloodDonationProject.util.RequestStatus;
 
 /**
@@ -35,63 +36,58 @@ public class BloodRequestServiceImpl implements BloodRequestService {
     @Override
     public BloodRequestResponseDTO createRequest(BloodRequestRequestDTO dto) {
         // All users can create blood requests - they are recipients asking for blood
-        
-        // Validate blood group format
-        String normalizedBloodGroup = BloodGroupValidator.normalize(dto.getBloodGroup());
-        if (normalizedBloodGroup == null) {
-            throw new RuntimeException("Invalid blood group. Must be one of: O-, O+, A-, A+, B-, B+, AB-, AB+");
+
+        // Validate blood group
+        if (dto.getBloodGroup() == null) {
+            throw new RuntimeException("Blood group is required");
         }
-        
+
         // Create entity and enforce PENDING status (ignore any status from DTO)
         BloodRequest entity = toEntity(dto);
-        entity.setBloodGroup(normalizedBloodGroup);
-        entity.setStatus(RequestStatus.PENDING);  // Always enforce PENDING on creation
-        
+        entity.setStatus(RequestStatus.PENDING); // Always enforce PENDING on creation
+
         BloodRequest saved = bloodRequestRepository.save(entity);
         return toDto(saved);
     }
 
     @Override
-    public BloodRequestResponseDTO updateRequest(Long requestId, BloodRequestRequestDTO dto) {
-        BloodRequest entity = bloodRequestRepository.findById(requestId)
+    public BloodRequestResponseDTO updateRequest(String requestId, BloodRequestRequestDTO dto) {
+        BloodRequest entity = bloodRequestRepository.findById(UUID.fromString(requestId))
                 .orElseThrow(() -> new RuntimeException("BloodRequest not found with id: " + requestId));
-        
+
         // Update fields (not allowing userId change)
-        if (dto.getBloodGroup() != null && !dto.getBloodGroup().isBlank()) {
-            String normalizedBloodGroup = BloodGroupValidator.normalize(dto.getBloodGroup());
-            if (normalizedBloodGroup == null) {
-                throw new RuntimeException("Invalid blood group. Must be one of: O-, O+, A-, A+, B-, B+, AB-, AB+");
-            }
-            entity.setBloodGroup(normalizedBloodGroup);
+        if (dto.getBloodGroup() != null) {
+            BloodGroup bg = BloodGroup.valueOf(dto.getBloodGroup().name());
+            entity.setBloodGroup(bg);
         }
-        
+
         entity.setUnits(dto.getUnits());
-        
+
         if (dto.getUrgency() != null) {
             entity.setUrgency(dto.getUrgency());
         }
-        
+
         if (dto.getHospital() != null && !dto.getHospital().isBlank()) {
             entity.setHospital(dto.getHospital());
         }
-        
+
         if (dto.getCity() != null && !dto.getCity().isBlank()) {
             entity.setCity(dto.getCity());
         }
-        
+
         // Allow status transitions: PENDING -> MATCH_FOUND -> COMPLETED/CANCELLED
         if (dto.getStatus() != null) {
             validateStatusTransition(entity.getStatus(), dto.getStatus());
             entity.setStatus(dto.getStatus());
         }
-        
+
         BloodRequest updated = bloodRequestRepository.save(entity);
         return toDto(updated);
     }
 
     @Override
-    public BloodRequestResponseDTO getRequestById(Long requestId) {
-        BloodRequest entity = bloodRequestRepository.findById(requestId)
+    public BloodRequestResponseDTO getRequestById(String requestId) {
+        BloodRequest entity = bloodRequestRepository.findById(UUID.fromString(requestId))
                 .orElseThrow(() -> new RuntimeException("BloodRequest not found with id: " + requestId));
         return toDto(entity);
     }
@@ -112,13 +108,15 @@ public class BloodRequestServiceImpl implements BloodRequestService {
 
     @Override
     public List<BloodRequestResponseDTO> getRequestsByBloodGroup(String bloodGroup) {
-        String normalized = BloodGroupValidator.normalize(bloodGroup);
-        if (normalized == null) {
+        try {
+            BloodGroup bg = BloodGroup
+                    .valueOf(bloodGroup.toUpperCase().replace("+", "_POSITIVE").replace("-", "_NEGATIVE"));
+            return bloodRequestRepository.findByBloodGroup(bg).stream()
+                    .map(this::toDto)
+                    .collect(Collectors.toList());
+        } catch (IllegalArgumentException e) {
             throw new RuntimeException("Invalid blood group: " + bloodGroup);
         }
-        return bloodRequestRepository.findByBloodGroup(normalized).stream()
-                .map(this::toDto)
-                .collect(Collectors.toList());
     }
 
     @Override
@@ -136,8 +134,8 @@ public class BloodRequestServiceImpl implements BloodRequestService {
     }
 
     @Override
-    public void deleteRequest(Long requestId) {
-        BloodRequest entity = bloodRequestRepository.findById(requestId)
+    public void deleteRequest(String requestId) {
+        BloodRequest entity = bloodRequestRepository.findById(UUID.fromString(requestId))
                 .orElseThrow(() -> new RuntimeException("BloodRequest not found with id: " + requestId));
         bloodRequestRepository.delete(entity);
     }
@@ -147,7 +145,8 @@ public class BloodRequestServiceImpl implements BloodRequestService {
      * 
      * Valid transitions:
      * PENDING -> CANCELLED (recipient can cancel before donor accepts)
-     * MATCH_FOUND -> CANCELLED, COMPLETED (donor accepted, can now complete or cancel)
+     * MATCH_FOUND -> CANCELLED, COMPLETED (donor accepted, can now complete or
+     * cancel)
      * COMPLETED -> (no transitions allowed - terminal state)
      * CANCELLED -> (no transitions allowed - terminal state)
      * 
@@ -158,13 +157,15 @@ public class BloodRequestServiceImpl implements BloodRequestService {
     private void validateStatusTransition(RequestStatus currentStatus, RequestStatus newStatus) {
         // Terminal states cannot be changed
         if (currentStatus == RequestStatus.COMPLETED || currentStatus == RequestStatus.CANCELLED) {
-            throw new RuntimeException("Cannot change status of " + currentStatus + " requests. Terminal states cannot be modified.");
+            throw new RuntimeException(
+                    "Cannot change status of " + currentStatus + " requests. Terminal states cannot be modified.");
         }
-        
+
         // From PENDING: only CANCELLED allowed
         if (currentStatus == RequestStatus.PENDING) {
             if (newStatus != RequestStatus.CANCELLED) {
-                throw new RuntimeException("PENDING requests can only be CANCELLED. COMPLETED is only available after donor accepts (MATCH_FOUND status).");
+                throw new RuntimeException(
+                        "PENDING requests can only be CANCELLED. COMPLETED is only available after donor accepts (MATCH_FOUND status).");
             }
         }
         // From MATCH_FOUND: CANCELLED or COMPLETED allowed
@@ -209,4 +210,3 @@ public class BloodRequestServiceImpl implements BloodRequestService {
         return dto;
     }
 }
-

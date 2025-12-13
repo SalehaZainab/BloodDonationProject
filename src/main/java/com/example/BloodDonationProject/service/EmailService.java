@@ -106,7 +106,7 @@ public class EmailService {
         System.out.println("Recipient: " + to);
         System.out.println("User Name: " + userName);
         System.out.println("OTP: " + otp);
-        
+
         String subject = appName + " - OTP Verification";
 
         String htmlBody = buildOtpEmailTemplate(userName, otp);

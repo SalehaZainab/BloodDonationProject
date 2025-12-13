@@ -1,6 +1,7 @@
 package com.example.BloodDonationProject.service.impl;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,10 +56,10 @@ public class DonorProfileServiceImpl implements DonorProfileService {
 	}
 
 	@Override
-	public DonorProfileResponseDTO updateDonorProfile(Long donorId, DonorProfileRequestDTO dto) {
+	public DonorProfileResponseDTO updateDonorProfile(String donorId, DonorProfileRequestDTO dto) {
 		// Check if donor exists
-		DonorProfile donor = donorRepository.findById(donorId)
-			.orElseThrow(() -> new ResourceNotFoundException("Donor not found with ID: " + donorId));
+		DonorProfile donor = donorRepository.findById(UUID.fromString(donorId))
+				.orElseThrow(() -> new ResourceNotFoundException("Donor not found with ID: " + donorId));
 
 		// Validate: Prevent changing userId for existing donor
 		if (!donor.getUserId().equals(dto.getUserId())) {
@@ -92,17 +93,17 @@ public class DonorProfileServiceImpl implements DonorProfileService {
 
 	@Override
 	@Transactional(readOnly = true)
-	public DonorProfileResponseDTO getDonorProfile(Long donorId) {
-		DonorProfile donor = donorRepository.findById(donorId)
-			.orElseThrow(() -> new ResourceNotFoundException("Donor not found with ID: " + donorId));
+	public DonorProfileResponseDTO getDonorProfile(String donorId) {
+		DonorProfile donor = donorRepository.findById(UUID.fromString(donorId))
+				.orElseThrow(() -> new ResourceNotFoundException("Donor not found with ID: " + donorId));
 		return toDto(donor);
 	}
 
 	@Override
 	@Transactional(readOnly = true)
-	public DonorProfileResponseDTO getByUserId(Long userId) {
+	public DonorProfileResponseDTO getByUserId(String userId) {
 		DonorProfile donor = donorRepository.findByUserId(userId)
-			.orElseThrow(() -> new ResourceNotFoundException("Donor not found for user ID: " + userId));
+				.orElseThrow(() -> new ResourceNotFoundException("Donor not found for user ID: " + userId));
 		return toDto(donor);
 	}
 
@@ -110,27 +111,27 @@ public class DonorProfileServiceImpl implements DonorProfileService {
 	@Transactional(readOnly = true)
 	public List<DonorProfileResponseDTO> getAllDonors() {
 		return donorRepository.findAll()
-			.stream()
-			.map(this::toDto)
-			.collect(Collectors.toList());
+				.stream()
+				.map(this::toDto)
+				.collect(Collectors.toList());
 	}
 
 	@Override
 	@Transactional(readOnly = true)
 	public List<DonorProfileResponseDTO> getAvailableDonors() {
 		return donorRepository.findByAvailability(Availability.AVAILABLE.getValue())
-			.stream()
-			.map(this::toDto)
-			.collect(Collectors.toList());
+				.stream()
+				.map(this::toDto)
+				.collect(Collectors.toList());
 	}
 
 	@Override
-	public void deleteDonorProfile(Long donorId) {
-		if (!donorRepository.existsById(donorId)) {
+	public void deleteDonorProfile(String donorId) {
+		if (!donorRepository.existsById(UUID.fromString(donorId))) {
 			throw new ResourceNotFoundException("Donor not found with ID: " + donorId);
 		}
 		try {
-			donorRepository.deleteById(donorId);
+			donorRepository.deleteById(UUID.fromString(donorId));
 		} catch (Exception e) {
 			throw new RuntimeException("Failed to delete donor profile: " + e.getMessage(), e);
 		}
