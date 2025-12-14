@@ -1,8 +1,8 @@
-🩸 Blood Donation Project
+Blood Donation Project
 
 A backend system for managing blood donors and recipients using a clean layered architecture, built with Spring Boot.
 
-🚀 Core Technologies
+Core Technologies
 
 Framework: Spring Boot
 
@@ -12,7 +12,7 @@ Build Tool: Maven
 
 IDE Support: Visual Studio Code (Spring Boot Extensions)
 
-🧩 Backend Stack
+Backend Stack
 Spring Framework Components
 
 Spring Data JPA – Database operations
@@ -35,7 +35,7 @@ Reduces boilerplate code
 
 @RequiredArgsConstructor for constructor injection
 
-🏗 Architecture Pattern
+Architecture Pattern
 Layered Architecture
 
 Controller Layer – API endpoints
@@ -48,8 +48,8 @@ DTO Layer – Data transfer
 
 Entity Layer – Domain models
 
-✨ Key Features
-👤 User Management
+Key Features
+User Management
 
 User registration with email validation
 
@@ -61,21 +61,21 @@ User activation / deactivation
 
 Email uniqueness validation
 
-🩸 Blood Group Management
+Blood Group Management
 
 Filter users by blood group
 
 Enum-based blood group handling (type safety)
 
-📍 Location-Based Search
+Location-Based Search
 
 Filter users by city
 
-🧠 Design Patterns Used
+Design Patterns Used
 
 Repository Pattern – Abstraction of data access
 
-✅ Best Practices Followed
+Best Practices Followed
 
 Clear separation of concerns
 
@@ -86,7 +86,10 @@ Proper transaction management
 Use of Enums for domain consistency
 
 Clean and maintainable code structure
+
 Exception handling for business logic validation
+
 DTO Pattern: for API request/response handling
+
 Service Pattern: for business logic encapsulation
 Transactional Pattern: for data consistency
